@@ -1,0 +1,6 @@
+"D:\App\JetBrains\CLion 2024.2.2\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" -S C:\Users\食草龙\Desktop\github\CSAPP\datalab-handout -B C:\Users\食草龙\Desktop\github\CSAPP\datalab-handout\cmake-build-debug
+CMake Error at CMakeLists.txt:13 (message):
+  Math library not found!
+
+
+-- Configuring incomplete, errors occurred!
