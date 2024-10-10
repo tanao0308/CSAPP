@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     /* When run with no arguments, the bomb reads its input lines 
      * from standard input. */
     if (argc == 1) {  
-	infile = stdin;
+	       infile = stdin;
     } 
 
     /* When run with one argument <file>, the bomb reads from <file> 
