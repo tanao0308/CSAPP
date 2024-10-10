@@ -224,13 +224,13 @@ int isAsciiDigit(int x) {
  */
 #include<stdio.h>
 int conditional(int x, int y, int z) {
+//  printf(">>>>>>>>>>>>>%d",x);
   x=!!x;
   x|=x<<1;
   x|=x<<2;
   x|=x<<4;
   x|=x<<8;
   x|=x<<16;
-  printf(">>>>>>>>>>>>>%d",x);
   x=x&(y^z);
   return x^z;
   return 2;
@@ -243,8 +243,24 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
-}
+      int signX = (x >> 31) & 1;  // x 的符号位
+      int signY = (y >> 31) & 1;  // y 的符号位
+
+      // 处理符号不同的情况
+      int diffSign = signX ^ signY;  // diffSign 为 1 表示符号不同
+      int return1 = signX & diffSign;  // 如果 x 是负数，y 是正数，返回 1
+      int return0 = signY & diffSign;  // 如果 x 是正数，y 是负数，返回 0
+
+      return return1 |
+
+      // 处理符号相同的情况
+      int diff = y + (~x + 1);  // 计算 y - x
+      int signDiff = (diff >> 31) & 1;  // y - x 的符号位
+      int resultWhenSameSign = !signDiff & !diffSign;  // 相同符号下，y - x 非负时返回 1
+
+      // 返回符号不同和相同情况的组合结果
+      return resultWhenDiffSign | resultWhenSameSign;
+     }
 //4
 /* 
  * logicalNeg - implement the ! operator, using all of 
