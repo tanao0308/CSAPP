@@ -381,19 +381,28 @@ Disassembly of section .text:
   400f42:	c3                   	ret    
 
 0000000000400f43 <phase_3>:
+  // 减少栈指针 rsp，为后续操作分配栈空间，预留了 0x18（24 个字节）。
   400f43:	48 83 ec 18          	sub    $0x18,%rsp
+  // lea 指令计算地址，将 rsp+0xc 和 rsp+0x8 的地址分别加载到 rcx 和 rdx，这些值将用于后续的函数调用
+  // 在 sscanf 调用之后，解析出来的第一个值会存储在 0x8(%rsp) 处（与 %rdx 对应），第二个值会存储在 0xC(%rsp) 处（与 %rcx 对应）。
   400f47:	48 8d 4c 24 0c       	lea    0xc(%rsp),%rcx
   400f4c:	48 8d 54 24 08       	lea    0x8(%rsp),%rdx
   400f51:	be cf 25 40 00       	mov    $0x4025cf,%esi
   400f56:	b8 00 00 00 00       	mov    $0x0,%eax
   400f5b:	e8 90 fc ff ff       	call   400bf0 <__isoc99_sscanf@plt>
+  // 检查 sscanf 的返回值，eax 存储了 sscanf 成功解析的数字个数。如果返回值大于 1，跳转到 0x400f6a 处继续执行；否则，调用 explode_bomb 函数，触发爆炸。
   400f60:	83 f8 01             	cmp    $0x1,%eax
   400f63:	7f 05                	jg     400f6a <phase_3+0x27>
   400f65:	e8 d0 04 00 00       	call   40143a <explode_bomb>
+  // 检查栈上 0x8 偏移处的值（rdx 保存的第一个解析的数字）。如果该值大于 7，则跳转到 0x400fad，再次调用 explode_bomb。
   400f6a:	83 7c 24 08 07       	cmpl   $0x7,0x8(%rsp)
   400f6f:	77 3c                	ja     400fad <phase_3+0x6a>
+  // 把栈上的第三个元素（ rsp 表示栈顶指针，假设全是 int 元素）存入 eax
   400f71:	8b 44 24 08          	mov    0x8(%rsp),%eax
+  // jmp 是跳转指令，* 表示通过间接寻址进行跳转。即它跳转到存储在某个内存位置的地址，而不是直接跳转到某个硬编码的地址。
+  // 偏移地址 0x402470 加上 rax 寄存器值的 8 倍。 eax 是 rax 的低 32 位部分
   400f75:	ff 24 c5 70 24 40 00 	jmp    *0x402470(,%rax,8)
+  // 以下为跳表
   400f7c:	b8 cf 00 00 00       	mov    $0xcf,%eax
   400f81:	eb 3b                	jmp    400fbe <phase_3+0x7b>
   400f83:	b8 c3 02 00 00       	mov    $0x2c3,%eax
@@ -412,6 +421,7 @@ Disassembly of section .text:
   400fb2:	b8 00 00 00 00       	mov    $0x0,%eax
   400fb7:	eb 05                	jmp    400fbe <phase_3+0x7b>
   400fb9:	b8 37 01 00 00       	mov    $0x137,%eax
+  //
   400fbe:	3b 44 24 0c          	cmp    0xc(%rsp),%eax
   400fc2:	74 05                	je     400fc9 <phase_3+0x86>
   400fc4:	e8 71 04 00 00       	call   40143a <explode_bomb>
