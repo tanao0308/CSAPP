@@ -430,18 +430,23 @@ Disassembly of section .text:
   400fc9:	48 83 c4 18          	add    $0x18,%rsp
   400fcd:	c3                   	ret    
 
+// 函数有三个参数 存在 rdi rsi rdx
+// https://blog.csdn.net/astrotycoon/article/details/73249371
 0000000000400fce <func4>:
-  // edx=0xe esi=0x0 edi=第一个输入数
-  400fce:	48 83 ec 08          	sub    $0x8,%rsp // 右 = 右 - 左
-  400fd2:	89 d0                	mov    %edx,%eax // 右 = 左， eax=0xe
-  400fd4:	29 f0                	sub    %esi,%eax // eax=0xe
-  400fd6:	89 c1                	mov    %eax,%ecx // ecx=0xe
-  400fd8:	c1 e9 1f             	shr    $0x1f,%ecx // 右 = 右 >> 左，ecx=0（右移了 31 位）
-  400fdb:	01 c8                	add    %ecx,%eax // 右 = 右 + 左，eax=0xe
-  400fdd:	d1 f8                	sar    %eax // 算数右移一位，eax=0x7
-  400fdf:	8d 0c 30             	lea    (%rax,%rsi,1),%ecx // ecx = rax + rsi * 1 = 7
-
-  400fe2:	39 f9                	cmp    %edi,%ecx // 第一个输入数 <= 7 ？
+  // edi(a)=第一个输入数 esi(b)=0x0 edx(c)=0xe
+  400fce:	48 83 ec 08          	sub    $0x8,%rsp // 右=右-左，这里表示函数里用到了两个栈变量
+  400fd2:	89 d0                	mov    %edx,%eax
+  400fd4:	29 f0                	sub    %esi,%eax
+  400fd6:	89 c1                	mov    %eax,%ecx
+  400fd8:	c1 e9 1f             	shr    $0x1f,%ecx
+  400fdb:	01 c8                	add    %ecx,%eax
+  400fdd:	d1 f8                	sar    %eax
+  400fdf:	8d 0c 30             	lea    (%rax,%rsi,1),%ecx
+  // 此时程序如下
+  // func4(int a,int b,int c) {
+  //     int x = c - b;
+  //     int tmp = (x>>31 + x)>>1 + b;
+  400fe2:	39 f9                	cmp    %edi,%ecx // tmp <= a ?
   400fe4:	7e 0c                	jle    400ff2 <func4+0x24>
 
   400fe6:	8d 51 ff             	lea    -0x1(%rcx),%edx
@@ -456,7 +461,24 @@ Disassembly of section .text:
   400ffe:	e8 cb ff ff ff       	call   400fce <func4>
   401003:	8d 44 00 01          	lea    0x1(%rax,%rax,1),%eax
   401007:	48 83 c4 08          	add    $0x8,%rsp
-  40100b:	c3                   	ret    
+  40100b:	c3                   	ret
+  /*
+  //                %edi    %esi   %edx
+  static int func4(int a, int b, int c)
+  {
+      int tmp = (((c - b) + ((c - b) >> 31)) >> 1) + b;
+
+      if (tmp <= a) {
+          if (tmp == a) {
+              return (0);
+          } else {
+              return func4(a, tmp + 1, c) * 2 + 1;
+          }
+      } else {
+          return func4(a, b, tmp - 1) * 2;
+      }
+  }
+  */
 
 000000000040100c <phase_4>:
   40100c:	48 83 ec 18          	sub    $0x18,%rsp
@@ -493,28 +515,36 @@ Disassembly of section .text:
   401062:	53                   	push   %rbx
   401063:	48 83 ec 20          	sub    $0x20,%rsp
   401067:	48 89 fb             	mov    %rdi,%rbx
+  // 这里将 fs+0x28 处的值存到了 rsp+0x18 处（栈从高往低增长，因此栈顶地址最小，这里的 rsp+0x18 表示当前函数空间的第一个空位）
   40106a:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
   401071:	00 00 
   401073:	48 89 44 24 18       	mov    %rax,0x18(%rsp)
-  401078:	31 c0                	xor    %eax,%eax
+
+  401078:	31 c0                	xor    %eax,%eax // 将 eax 设为 0
   40107a:	e8 9c 02 00 00       	call   40131b <string_length>
+  // 如果输入的字符串长度 == 6 则跳转
   40107f:	83 f8 06             	cmp    $0x6,%eax
   401082:	74 4e                	je     4010d2 <phase_5+0x70>
+
   401084:	e8 b1 03 00 00       	call   40143a <explode_bomb>
   401089:	eb 47                	jmp    4010d2 <phase_5+0x70>
-  40108b:	0f b6 0c 03          	movzbl (%rbx,%rax,1),%ecx
-  40108f:	88 0c 24             	mov    %cl,(%rsp)
+  // 此为 for i=0 i<6 i++ 的循环
+  // madu iers nfot vbyl
+  40108b:	0f b6 0c 03          	movzbl (%rbx,%rax,1),%ecx // 从内存地址 (%rbx + %rax * 1) 读取一个字节，并将其零扩展到 32 位
+  40108f:	88 0c 24             	mov    %cl,(%rsp) // 将寄存器 %cl 的内容（%ecx 的低字节）存储到栈指针 %rsp 指向的内存地址
   401092:	48 8b 14 24          	mov    (%rsp),%rdx
-  401096:	83 e2 0f             	and    $0xf,%edx
-  401099:	0f b6 92 b0 24 40 00 	movzbl 0x4024b0(%rdx),%edx
-  4010a0:	88 54 04 10          	mov    %dl,0x10(%rsp,%rax,1)
+  401096:	83 e2 0f             	and    $0xf,%edx // 保留 edx 的末尾 4 位
+  401099:	0f b6 92 b0 24 40 00 	movzbl 0x4024b0(%rdx),%edx // 提取这个字符串的第 rdx 位
+  4010a0:	88 54 04 10          	mov    %dl,0x10(%rsp,%rax,1) // 将上面提取的字母存入 %rsp + %rax * 1 + 0x10
   4010a4:	48 83 c0 01          	add    $0x1,%rax
   4010a8:	48 83 f8 06          	cmp    $0x6,%rax
   4010ac:	75 dd                	jne    40108b <phase_5+0x29>
+
   4010ae:	c6 44 24 16 00       	movb   $0x0,0x16(%rsp)
   4010b3:	be 5e 24 40 00       	mov    $0x40245e,%esi
   4010b8:	48 8d 7c 24 10       	lea    0x10(%rsp),%rdi
   4010bd:	e8 76 02 00 00       	call   401338 <strings_not_equal>
+  // 若此时字符串 != flyers 则 bomb
   4010c2:	85 c0                	test   %eax,%eax
   4010c4:	74 13                	je     4010d9 <phase_5+0x77>
   4010c6:	e8 6f 03 00 00       	call   40143a <explode_bomb>
