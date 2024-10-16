@@ -562,6 +562,8 @@ Disassembly of section .text:
   4010f3:	c3                   	ret    
 
 00000000004010f4 <phase_6>:
+// 这里 push 为了保存上下文，使函数结束以后这些寄存器的值可以通过栈恢复
+// 在使用 push 指令时，不需要手动更新 rsp，因为处理器会自动更新栈指针 rsp。
   4010f4:	41 56                	push   %r14
   4010f6:	41 55                	push   %r13
   4010f8:	41 54                	push   %r12
@@ -569,19 +571,24 @@ Disassembly of section .text:
   4010fb:	53                   	push   %rbx
   4010fc:	48 83 ec 50          	sub    $0x50,%rsp
   401100:	49 89 e5             	mov    %rsp,%r13
-  401103:	48 89 e6             	mov    %rsp,%rsi
+  // rdi 是 "%d %d %d %d %d %d"，rsi 是 存放读取到的数字的地址，为 si, si+4, si+8, ...
+  401103:	48 89 e6             	mov    %rsp,%rsi // 这里 si 是栈里的第一个空位置
   401106:	e8 51 03 00 00       	call   40145c <read_six_numbers>
   40110b:	49 89 e6             	mov    %rsp,%r14
   40110e:	41 bc 00 00 00 00    	mov    $0x0,%r12d
+
   401114:	4c 89 ed             	mov    %r13,%rbp
-  401117:	41 8b 45 00          	mov    0x0(%r13),%eax
+  401117:	41 8b 45 00          	mov    0x0(%r13),%eax // eax 为第一个输入数字
   40111b:	83 e8 01             	sub    $0x1,%eax
+  // 需要 eax <= 5
   40111e:	83 f8 05             	cmp    $0x5,%eax
   401121:	76 05                	jbe    401128 <phase_6+0x34>
   401123:	e8 12 03 00 00       	call   40143a <explode_bomb>
+  // 这里循环 6 次
   401128:	41 83 c4 01          	add    $0x1,%r12d
   40112c:	41 83 fc 06          	cmp    $0x6,%r12d
   401130:	74 21                	je     401153 <phase_6+0x5f>
+
   401132:	44 89 e3             	mov    %r12d,%ebx
   401135:	48 63 c3             	movslq %ebx,%rax
   401138:	8b 04 84             	mov    (%rsp,%rax,4),%eax
@@ -593,6 +600,7 @@ Disassembly of section .text:
   40114b:	7e e8                	jle    401135 <phase_6+0x41>
   40114d:	49 83 c5 04          	add    $0x4,%r13
   401151:	eb c1                	jmp    401114 <phase_6+0x20>
+
   401153:	48 8d 74 24 18       	lea    0x18(%rsp),%rsi
   401158:	4c 89 f0             	mov    %r14,%rax
   40115b:	b9 07 00 00 00       	mov    $0x7,%ecx
