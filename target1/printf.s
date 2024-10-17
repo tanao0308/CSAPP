@@ -7,6 +7,10 @@ __printf_chk:
 .LFB23:
 	.cfi_startproc
 	endbr64
+    pushq %rbp
+    movq  %rsp, %rbp
+    andq  $-0x10, %rsp
+    subq  $-0x8, %rsp
 	subq	$216, %rsp
 	.cfi_def_cfa_offset 224
 	movq	%rsi, %r10
@@ -44,6 +48,7 @@ __printf_chk:
 	subq	%fs:40, %rdx
 	jne	.L6
 	addq	$216, %rsp
+	leave
 	.cfi_remember_state
 	.cfi_def_cfa_offset 8
 	ret

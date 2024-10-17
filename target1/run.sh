@@ -1,1 +1,1 @@
-./hex2raw < answer.txt | ./ctarget -q
+./hex2raw < answer.txt | LD_PRELOAD=./printf.so ./ctarget -q
