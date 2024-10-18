@@ -776,9 +776,9 @@ Disassembly of section .text:
 
 00000000004017a8 <getbuf>:
   4017a8:	48 83 ec 28          	sub    $0x28,%rsp // 为局部变量（buf）分配 40 字节的栈空间。
-  4017ac:	48 89 e7             	mov    %rsp,%rdi
+  4017ac:	48 89 e7             	mov    %rsp,%rdi // 将栈第一个元素作为目标字符串的地址输入 Gets
   4017af:	e8 8c 02 00 00       	call   401a40 <Gets>
-  4017b4:	b8 01 00 00 00       	mov    $0x1,%eax
+  4017b4:	b8 01 00 00 00       	mov    $0x1,%eax // 直接拿 1 作为返回值
   4017b9:	48 83 c4 28          	add    $0x28,%rsp
   4017bd:	c3                   	ret    
   4017be:	90                   	nop
@@ -799,6 +799,7 @@ Disassembly of section .text:
   4017ec:	48 83 ec 08          	sub    $0x8,%rsp
   4017f0:	89 fa                	mov    %edi,%edx
   4017f2:	c7 05 e0 2c 20 00 02 	movl   $0x2,0x202ce0(%rip)        # 6044dc <vlevel>
+  // vlevel 通常是一个变量或状态标志，用于跟踪或表示程序的某种状态。可见性级别，权限标志或计数器
   4017f9:	00 00 00 
   4017fc:	3b 3d e2 2c 20 00    	cmp    0x202ce2(%rip),%edi        # 6044e4 <cookie>
   401802:	75 20                	jne    401824 <touch2+0x38>
@@ -925,7 +926,7 @@ Disassembly of section .text:
   40199f:	90                   	nop
 
 00000000004019a0 <save_char>:
-  4019a0:	8b 05 5e 37 20 00    	mov    0x20375e(%rip),%eax        # 605104 <gets_cnt>
+  4019a0:	8b 05 5e 37 20 00    	mov    0x20375e(%rip),%eax        # 605104 <gets_cnt> 全局变量 gets_cnt ，记录了现在输入了多少个字符
   4019a6:	3d ff 03 00 00       	cmp    $0x3ff,%eax
   4019ab:	7f 49                	jg     4019f6 <save_char+0x56>
   4019ad:	8d 14 40             	lea    (%rax,%rax,2),%edx
@@ -983,9 +984,9 @@ Disassembly of section .text:
   401a67:	48 8b 3d 62 2a 20 00 	mov    0x202a62(%rip),%rdi        # 6044d0 <infile>
   401a6e:	e8 4d f3 ff ff       	call   400dc0 <_IO_getc@plt>
   401a73:	83 f8 ff             	cmp    $0xffffffff,%eax
-  401a76:	74 05                	je     401a7d <Gets+0x3d>
+  401a76:	74 05                	je     401a7d <Gets+0x3d> // 如果读取到 EOF (eax == 0xFFFFFFFF)，则跳转到地址 401a7d 处执行。
   401a78:	83 f8 0a             	cmp    $0xa,%eax
-  401a7b:	75 d9                	jne    401a56 <Gets+0x16>
+  401a7b:	75 d9                	jne    401a56 <Gets+0x16> // 如果不是换行符，跳回到 401a56，继续读取下一个字符。
   401a7d:	c6 03 00             	movb   $0x0,(%rbx)
   401a80:	b8 00 00 00 00       	mov    $0x0,%eax
   401a85:	e8 6e ff ff ff       	call   4019f8 <save_term>

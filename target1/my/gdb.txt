@@ -1,0 +1,5 @@
+gdb ./ctarget
+set environment LD_PRELOAD ./printf.so
+run < <(./hex2raw < answer.txt) -q
+set args -q
+b getbuf
