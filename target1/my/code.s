@@ -1,3 +1,4 @@
-mov $0x59b997fa,%rdi
-pushq $0x4017ec
-ret
+
+        mov $0x5561dca0,%rdi
+        pushq $0x4018fa
+        ret
