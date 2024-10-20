@@ -1,0 +1,3 @@
+Task2:
+    要求是将 cookie 的值传给 touch2 （rdi），然后调用 touch2
+    mov $cookie $rdi

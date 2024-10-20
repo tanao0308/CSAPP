@@ -1,0 +1,1 @@
+./hex2raw < answer.txt | LD_PRELOAD=./printf.so ./rtarget -q
