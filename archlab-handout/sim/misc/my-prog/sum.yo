@@ -1,0 +1,48 @@
+                            | # INIT
+0x000:                      |     .align 8 # 这表示将接下来的数据对齐到8字节边界上，以确保数据在内存中按8字节对齐
+0x000:                      |     .pos 0
+0x000: 30f40002000000000000 |     irmovq stack, %rsp # 初始化 rsp 寄存器（初始为栈顶指针）
+0x00a: 804400000000000000   |     call main
+0x013: 00                   |     halt # halt 指令用于终止程序的执行。
+                            | 
+                            | # DATA
+0x014:                      | ele1:
+0x014: 0a00000000000000     |     .quad 0x00a
+0x01c: 2400000000000000     |     .quad ele2
+0x024:                      | ele2:
+0x024: b000000000000000     |     .quad 0x0b0
+0x02c: 3400000000000000     |     .quad ele3
+0x034:                      | ele3:
+0x034: 000c000000000000     |     .quad 0xc00
+0x03c: 0000000000000000     |     .quad 0
+                            | 
+0x044:                      | main:
+0x044: 30f61400000000000000 |     irmovq ele1, %rsi
+0x04e: 805800000000000000   |     call sum_list
+0x057: 90                   |     ret
+                            | 
+                            | # CODE
+0x058:                      | sum_list:
+0x058: 6300                 |     xorq %rax,%rax
+0x05a: 6266                 |     andq %rsi,%rsi
+0x05c: 707f00000000000000   |     jmp test
+0x065:                      | loop:
+0x065: 50860000000000000000 |     mrmovq (%rsi),%r8
+0x06f: 6080                 |     addq %r8,%rax
+0x071: 50960800000000000000 |     mrmovq 8(%rsi),%r9 # mrmovq 表示将 rsi的值+8 这个地址里的数存给 r9
+0x07b: 2096                 |     rrmovq %r9,%rsi # rrmovq 表示将寄存器的值复制到另一个寄存器
+0x07d: 6266                 |     andq %rsi,%rsi
+0x07f:                      | test:
+0x07f: 746500000000000000   |     jne loop
+                            | 
+                            | # STACK
+                            | # Stack starts here and grows to lower addresses，用来定义程序中栈的起始位置
+0x200:                      | 	.pos 0x200
+0x200:                      | stack:
+                            | 
+                            | # irmovq $0 %rax     复制立即数
+                            | # mrmovq (%rsi) %rax 将第一个参数作为地址，复制此地址上的数给第二个， mrmovq 必须加括号
+                            | # rrmovq %rsi %rax   寄存器间复制
+                            | # 当你写 (%rsi) 时，意味着要访问 %rsi 寄存器所指向的内存地址。
+                            | # 不加括号 %rsi 直接表示寄存器的值，而不是访问其指向的内存。
+                            | # 程序最后要空一行？

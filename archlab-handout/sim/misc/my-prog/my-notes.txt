@@ -1,0 +1,2 @@
+./yas prog.ys
+./yis prog.yo

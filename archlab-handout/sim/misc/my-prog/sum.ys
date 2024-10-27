@@ -1,0 +1,48 @@
+# INIT
+    .align 8 # 这表示将接下来的数据对齐到8字节边界上，以确保数据在内存中按8字节对齐
+    .pos 0
+    irmovq stack, %rsp # 初始化 rsp 寄存器（初始为栈顶指针）
+    call main
+    halt # halt 指令用于终止程序的执行。
+
+# DATA
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+
+main:
+    irmovq ele1, %rsi
+    call sum_list
+    ret
+
+# CODE
+sum_list:
+    xorq %rax,%rax
+    andq %rsi,%rsi
+    jmp test
+loop:
+    mrmovq (%rsi),%r8
+    addq %r8,%rax
+    mrmovq 8(%rsi),%r9 # mrmovq 表示将 rsi的值+8 这个地址里的数存给 r9
+    rrmovq %r9,%rsi # rrmovq 表示将寄存器的值复制到另一个寄存器
+    andq %rsi,%rsi
+test:
+    jne loop
+
+# STACK
+# Stack starts here and grows to lower addresses，用来定义程序中栈的起始位置
+	.pos 0x200
+stack:
+
+# irmovq $0 %rax     复制立即数
+# mrmovq (%rsi) %rax 将第一个参数作为地址，复制此地址上的数给第二个， mrmovq 必须加括号
+# rrmovq %rsi %rax   寄存器间复制
+# 当你写 (%rsi) 时，意味着要访问 %rsi 寄存器所指向的内存地址。
+# 不加括号 %rsi 直接表示寄存器的值，而不是访问其指向的内存。
+# 程序最后要空一行？
