@@ -1,0 +1,55 @@
+# INIT
+    .align 8 # 这表示将接下来的数据对齐到8字节边界上，以确保数据在内存中按8字节对齐
+    .pos 0
+    irmovq stack, %rsp # 初始化 rsp 寄存器（初始为栈顶指针）
+    call main
+    halt # halt 指令用于终止程序的执行。
+
+# DATA
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+
+main:
+    irmovq ele1, %rsi
+    xorq %rax,%rax
+    # irmovq $3,%rax
+    call rsum_list
+    ret
+
+# CODE
+rsum_list:
+    andq %rsi,%rsi
+    je return
+
+    mrmovq (%rsi),%r8
+    addq %r8,%rax
+    mrmovq 8(%rsi),%r9
+    rrmovq %r9,%rsi
+    call rsum_list
+return:
+    ret
+
+# STACK
+# Stack starts here and grows to lower addresses，用来定义程序中栈的起始位置
+	.pos 0x200
+stack:
+
+# 1. je (Jump if Equal)
+# 语法：je label
+# 功能：如果上一个比较指令（如 cmp）的结果为零（ZF = 1），则跳转到指定的标签。
+# 用途：用于检查两个值是否相等。
+# 2. jne (Jump if Not Equal)
+# 语法：jne label
+# 功能：如果上一个比较指令的结果不为零（ZF = 0），则跳转到指定的标签。
+# 用途：用于检查两个值是否不相等。
+# 3. jmp (Jump)
+# 语法：jmp label
+# 功能：无条件跳转到指定的标签。没有任何条件检查。
+# 用途：用于直接控制程序流，可以在循环或分支中使用。
