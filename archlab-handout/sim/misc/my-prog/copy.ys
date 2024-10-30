@@ -1,0 +1,49 @@
+# INIT
+    .align 8 # 这表示将接下来的数据对齐到8字节边界上，以确保数据在内存中按8字节对齐
+    .pos 0
+    irmovq stack, %rsp # 初始化 rsp 寄存器（初始为栈顶指针）
+    call main
+    halt # halt 指令用于终止程序的执行。
+
+# DATA
+src:
+    .quad 0x00a
+    .quad 0x0b0
+    .quad 0xc00
+dest:
+    .quad 0x111
+    .quad 0x222
+    .quad 0x333
+
+# CODE
+main:
+    # rdi rsi rdx
+    irmovq src, %rdi
+    irmovq dest, %rsi
+    irmovq $3, %rdx // 立即数前面要加 $  $3
+    call copy_block
+    ret
+
+copy_block:
+    irmovq $8, %r9
+    irmovq $1, %r10
+    xorq %rax, %rax
+loop:
+    andq %rdx, %rdx
+    je endloop
+
+    mrmovq (%rdi), %r8 # mr: memory to register
+    rmmovq %r8, (%rsi) # rm: register to memory
+
+    # TODO ++src, ++dest, --len
+    addq %r9, %rdi
+    addq %r9, %rsi
+    subq %r10, %rdx
+
+    jmp loop
+endloop:
+    ret
+
+# STACK
+	.pos 0x200
+stack:
