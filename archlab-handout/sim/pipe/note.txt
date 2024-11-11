@@ -1,0 +1,69 @@
+检查长度是否超过 1000 Byte 的限制
+    ../misc/yas ncopy.ys && ./check-len.pl < ncopy.yo
+检查正确性
+    ./correctness.pl
+修改 pipe-full.hcl 后，重新构建模拟器
+    make clean; make psim VERSION=full
+修改 ncopy.ys 后，检查 CPE、本地跑分
+    make drivers && ./benchmark.pl
+
+
+##################################################################
+我的优化方案：
+1. 加入 iaddq 指令，从而缩减程序指令条数
+2. 循环展开，5个一组，减少气泡
+##################################################################
+testq: 检测是否为负数
+##################################################################
+int ncopy(int *src, int *dest, int len) {
+    int count=0, tmp;
+    while(len--) {
+        tmp=*src;
+        *dest=tmp;
+        if(tmp>0)
+            ++count;
+        ++src;
+        ++dest;
+    }
+    return count;
+}
+
+int ncopy(int *src, int *dest, int len) {
+    int count=0, tmp;
+    while(len>=6) {
+        tmp0=*src;
+        tmp1=*(src+1);
+        tmp2=*(src+2);
+        tmp3=*(src+3);
+        tmp4=*(src+4);
+        tmp5=*(src+5);
+        *dest=tmp0;
+        *(dest+1)=tmp1;
+        *(dest+2)=tmp2;
+        *(dest+3)=tmp3;
+        *(dest+4)=tmp4;
+        *(dest+5)=tmp5;
+        if(tmp0>0)
+            ++count;
+        if(tmp1>0)
+            ++count;
+        if(tmp2>0)
+            ++count;
+        if(tmp3>0)
+            ++count;
+        if(tmp4>0)
+            ++count;
+        if(tmp5>0)
+            ++count;
+        len-=6;
+        src+=6;
+        dest+=6;
+    }
+    while(len--) {
+        tmp=*src;
+        *dest=tmp;
+        if(tmp>0)
+            ++count;
+    }
+    return count;
+}

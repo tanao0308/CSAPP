@@ -12,27 +12,69 @@
 # Function prologue.
 # %rdi = src, %rsi = dst, %rdx = len
 ncopy:
-
 ##################################################################
 # You can modify this portion
-	# Loop header
 	xorq %rax,%rax		# count = 0;
-	andq %rdx,%rdx		# len <= 0?
-	jle Done		# if so, goto Done:
+# 5 个一组的数字一起做
+	jle EndLoop0
+Loop0:
+    mrmovq (%rdi), %r10	# read val from src...
+    mrmovq 8(%rdi), %r11
+    mrmovq 16(%rdi), %r12
+    mrmovq 24(%rdi), %r13
+    mrmovq 32(%rdi), %r14
 
-Loop:	mrmovq (%rdi), %r10	# read val from src...
-	rmmovq %r10, (%rsi)	# ...and store it to dst
 	andq %r10, %r10		# val <= 0?
-	jle Npos		# if so, goto Npos:
-	irmovq $1, %r10
-	addq %r10, %rax		# count++
-Npos:	irmovq $1, %r10
-	subq %r10, %rdx		# len--
-	irmovq $8, %r10
-	addq %r10, %rdi		# src++
-	addq %r10, %rsi		# dst++
-	andq %rdx,%rdx		# len > 0?
-	jg Loop			# if so, goto Loop:
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	jle Npos0		    # if so, goto Npos0:
+	iaddq $1, %rax		# count++
+Npos0:
+	andq %r11, %r11
+	rmmovq %r11, 8(%rsi)
+	jle Npos1
+	iaddq $1, %rax
+Npos1:
+	andq %r12, %r12
+	rmmovq %r12, 16(%rsi)
+	jle Npos2
+	iaddq $1, %rax
+Npos2:
+	andq %r13, %r13
+	rmmovq %r13, 24(%rsi)
+	jle Npos3
+	iaddq $1, %rax
+Npos3:
+	andq %r14, %r14
+	rmmovq %r14, 32(%rsi)
+	jle Npos4
+	iaddq $1, %rax
+Npos4:
+	iaddq $-5, %rdx		# len-=5
+	iaddq $40, %rdi		# src+=5
+	iaddq $40, %rsi		# dst+=5
+EndLoop0:
+    rrmovq %rdx, %r10
+	iaddq $-5, %r10
+    andq %r10, %r10		# len - 5 >= 0
+    jge Loop0               # 则跳转
+
+# 剩余数字的循环
+	jle EndLoop1
+Loop1:
+    mrmovq (%rdi), %r10	# read val from src...
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	andq %r10, %r10
+	jle Npos5
+	iaddq $1, %rax
+Npos5:
+	iaddq $-1, %rdx		# len--
+	iaddq $8, %rdi		# src++
+	iaddq $8, %rsi		# dst++
+EndLoop1:
+    rrmovq %rdx, %r10
+	iaddq $-1, %r10
+    andq %r10, %r10		# len - 1 >= 0
+    jge Loop1               # 则跳转
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
