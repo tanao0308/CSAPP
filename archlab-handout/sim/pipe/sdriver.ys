@@ -29,36 +29,36 @@ ncopy:
 # You can modify this portion
 	xorq %rax,%rax		# count = 0;
 # 5 个一组的数字一起做
-	jle EndLoop0
+	jmp EndLoop0
 Loop0:
     mrmovq (%rdi), %r10	# read val from src...
     mrmovq 8(%rdi), %r11
     mrmovq 16(%rdi), %r12
     mrmovq 24(%rdi), %r13
     mrmovq 32(%rdi), %r14
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	rmmovq %r11, 8(%rsi)
+	rmmovq %r12, 16(%rsi)
+	rmmovq %r13, 24(%rsi)
+	rmmovq %r14, 32(%rsi)
 
 	andq %r10, %r10		# val <= 0?
-	rmmovq %r10, (%rsi)	# ...and store it to dst
 	jle Npos0		    # if so, goto Npos0:
 	iaddq $1, %rax		# count++
 Npos0:
 	andq %r11, %r11
-	rmmovq %r11, 8(%rsi)
 	jle Npos1
 	iaddq $1, %rax
 Npos1:
 	andq %r12, %r12
-	rmmovq %r12, 16(%rsi)
 	jle Npos2
 	iaddq $1, %rax
 Npos2:
 	andq %r13, %r13
-	rmmovq %r13, 24(%rsi)
 	jle Npos3
 	iaddq $1, %rax
 Npos3:
 	andq %r14, %r14
-	rmmovq %r14, 32(%rsi)
 	jle Npos4
 	iaddq $1, %rax
 Npos4:
@@ -72,22 +72,88 @@ EndLoop0:
     jge Loop0               # 则跳转
 
 # 剩余数字的循环
-	jle EndLoop1
-Loop1:
-    mrmovq (%rdi), %r10	# read val from src...
-	rmmovq %r10, (%rsi)	# ...and store it to dst
-	andq %r10, %r10
-	jle Npos5
-	iaddq $1, %rax
-Npos5:
-	iaddq $-1, %rdx		# len--
-	iaddq $8, %rdi		# src++
-	iaddq $8, %rsi		# dst++
-EndLoop1:
-    rrmovq %rdx, %r10
-	iaddq $-1, %r10
-    andq %r10, %r10		# len - 1 >= 0
-    jge Loop1               # 则跳转
+remainder:
+    iaddq $-2, %rdx     # len in [0,4]
+    jge remainder24
+remainder01:
+    iaddq $1, %rdx
+    jge remainder1
+remainder0:
+        jmp Done
+remainder1:
+        mrmovq (%rdi), %r10
+        rmmovq %r10, (%rsi)
+        andq %r10, %r10
+        jle Nposr10
+        iaddq $1, %rax
+    Nposr10:
+        jmp Done
+remainder24:
+    iaddq $-1, %rdx
+    jge remainder34
+remainder2:
+        mrmovq (%rdi), %r10
+        mrmovq 8(%rdi), %r11
+        rmmovq %r10, (%rsi)
+        rmmovq %r11, 8(%rsi)
+        andq %r10, %r10
+        jle Nposr20
+        iaddq $1, %rax
+    Nposr20:
+        andq %r11, %r11
+        jle Nposr21
+        iaddq $1, %rax
+    Nposr21:
+        jmp Done
+remainder34:
+    iaddq $-1, %rdx
+    jge remainder4
+remainder3:
+        mrmovq (%rdi), %r10
+        mrmovq 8(%rdi), %r11
+        mrmovq 16(%rdi), %r12
+        rmmovq %r10, (%rsi)
+        rmmovq %r11, 8(%rsi)
+        rmmovq %r12, 16(%rsi)
+        andq %r10, %r10
+        jle Nposr30
+        iaddq $1, %rax
+    Nposr30:
+        andq %r11, %r11
+        jle Nposr31
+        iaddq $1, %rax
+    Nposr31:
+        andq %r12, %r12
+        jle Nposr32
+        iaddq $1, %rax
+    Nposr32:
+        jmp Done
+remainder4:
+        mrmovq (%rdi), %r10
+        mrmovq 8(%rdi), %r11
+        mrmovq 16(%rdi), %r12
+        mrmovq 24(%rdi), %r13
+        rmmovq %r10, (%rsi)
+        rmmovq %r11, 8(%rsi)
+        rmmovq %r12, 16(%rsi)
+        rmmovq %r13, 24(%rsi)
+        andq %r10, %r10
+        jle Nposr40
+        iaddq $1, %rax
+    Nposr40:
+        andq %r11, %r11
+        jle Nposr41
+        iaddq $1, %rax
+    Nposr41:
+        andq %r12, %r12
+        jle Nposr42
+        iaddq $1, %rax
+    Nposr42:
+        andq %r13, %r13
+        jle Nposr43
+        iaddq $1, %rax
+    Nposr43:
+        jmp Done
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
@@ -105,9 +171,9 @@ EndFun:
 	.align 8
 src:
 	.quad -1
-	.quad -2
+	.quad 2
 	.quad 3
-	.quad 4
+	.quad -4
 	.quad 0xbcdefa # This shouldn't get moved
 
 	.align 16
