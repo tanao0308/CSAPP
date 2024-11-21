@@ -46,18 +46,51 @@ void parse_args(int argc, char *argv[]) {
     }
 }
 
-void work() {
-    FILE *file;
-    char line[256];  // 用于存储每行读取的数据
-    char op;
-    unsigned long addr;
-    int siz;
+struct Block {
+    bool valid;
+    uint32_t Tag;
+    char* data;
+};
+struct Set {
+    Block* block;
+};
+struct Cache {
+    Set* set;
+};
+
+void exec_line(char op, unsigned long addr, int siz) {
+    switch (op) {
+        case 'I':
+            printf("Instruction load at address 0x%lx, size %d\n", addr, siz);
+        break;
+        case 'L':
+            printf("Data load at address 0x%lx, size %d\n", addr, siz);
+        break;
+        case 'S':
+            printf("Data store at address 0x%lx, size %d\n", addr, siz);
+        break;
+        case 'M':
+            printf("Data modify at address 0x%lx, size %d\n", addr, siz);
+        break;
+        default:
+            printf("Unknown operation: %c\n", op);
+        exit(1);
+        break;
+    }
+}
+
+void exec_file() {
     // 打开文件
+    FILE *file;
+    char line[256];
     file = fopen(arg_t, "r");
     if (file == NULL) {
         perror("Error opening file");
         exit(EXIT_FAILURE);
     }
+    char op;
+    unsigned long addr;
+    int siz;
     // 逐行读取文件内容
     while (fgets(line, sizeof(line), file)) {
         // 跳过空行
@@ -74,36 +107,19 @@ void work() {
         }
         // 打印解析结果
         printf("Operation: %c, Address: 0x%lx, Size: %d\n", op, addr, siz);
-        // 根据 operation 执行相应的逻辑处理
-//        switch (operation) {
-//            case 'I':
-//                printf("Instruction load at address 0x%lx, size %d\n", address, size);
-//            break;
-//            case 'L':
-//                printf("Data load at address 0x%lx, size %d\n", address, size);
-//            break;
-//            case 'S':
-//                printf("Data store at address 0x%lx, size %d\n", address, size);
-//            break;
-//            case 'M':
-//                printf("Data modify at address 0x%lx, size %d\n", address, size);
-//            break;
-//            default:
-//                printf("Unknown operation: %c\n", operation);
-//            break;
-//        }
+        exec_line(op, addr, siz);
     }
-    // 关闭文件
     fclose(file);
 }
+
 
 int main(int argc, char *argv[]) {
     // 解析命令行参数
     parse_args(argc, argv);
     print_parse_args();
     // 模拟 tracefile 文件中的操作
-    work();
+    exec_file();
     printSummary(0, 0, 0);
     return 0;
 }
-// ./csim -s 4 -E 2 -b 3 -t trace.txt
+// ./csim -s 4 -E 2 -b 3 -t ./traces/yi2.trace
