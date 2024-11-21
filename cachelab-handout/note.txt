@@ -1,0 +1,36 @@
+>>> 命令行参数解释
+    Usage: ./csim-ref [-hv] -s <s> -E <E> -b <b> -t <tracefile>
+    • -h: Optional help flag that prints usage info
+    • -v: Optional verbose flag that displays trace info
+    • -s <s>: Number of set index bits (S = 2^s is the number of sets)
+    • -E <E>: Associativity (number of lines per set)
+    • -b <b>: Number of block bits (B = 2^b is the block size)
+    • -t <tracefile>: Name of the valgrind trace to replay
+
+    这是一个命令行工具 csim-ref 的用法说明。具体选项解释如下：
+    Usage: ./csim-ref [-hv] -s <s> -E <E> -b <b> -t <tracefile>
+    -h: 可选的帮助标志，显示使用说明。
+    -v: 可选的详细标志，显示追踪信息。
+    -s <s>: 设置索引位数。S = 2^s 是集合数（即缓存的集合数）。s 是指数，表示集合数的对数。
+    -E <E>: 关联度（每个集合的行数）。表示每个缓存集合中有多少条缓存行。
+    -b <b>: 块大小的位数。B = 2^b 是每个缓存块的大小。b 是对缓存块大小的对数。
+    -t <tracefile>: 要回放的 Valgrind 跟踪文件的名称。此文件包含了程序运行时的内存访问行为。
+
+>>> tracefile 格式解释
+    Each line denotes one or two memory accesses. The format of each line is
+    [space]operation address,size
+    The operation field denotes the type of memory access: “I” denotes an instruction load, “L” a data load,
+    “S” a data store, and “M” a data modify (i.e., a data load followed by a data store). There is never a space
+    before each “I”. There is always a space before each “M”, “L”, and “S”. The address field specifies a 64-bit
+    hexadecimal memory address. The size field specifies the number of bytes accessed by the operation.
+    operation：
+        表示内存访问的类型，可以是以下四种：
+        I：指令加载（Instruction load）。
+        L：数据加载（Data load）。
+        S：数据存储（Data store）。
+        M：数据修改（Data modify），表示一次数据加载后紧接着的数据存储操作。
+    address：
+        64位十六进制格式的内存地址（比如：0x7fff）。
+        这是内存访问发生的位置。
+    size：
+        表示操作涉及的数据字节数（比如 4 表示操作访问了 4 字节数据）。
