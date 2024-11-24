@@ -22,6 +22,59 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
+    if(M == 32) {
+        int i, j, k, a, b, c, d, e, f, g, h;
+        for(i=0;i<N;i+=8) {
+            for(j=0;j<N;j+=8) {
+                for(k=0;k<8;++k) {
+                    a = A[i+k][j+0];
+                    b = A[i+k][j+1];
+                    c = A[i+k][j+2];
+                    d = A[i+k][j+3];
+                    e = A[i+k][j+4];
+                    f = A[i+k][j+5];
+                    g = A[i+k][j+6];
+                    h = A[i+k][j+7];
+                    B[j+0][i+k]=a;
+                    B[j+1][i+k]=b;
+                    B[j+2][i+k]=c;
+                    B[j+3][i+k]=d;
+                    B[j+4][i+k]=e;
+                    B[j+5][i+k]=f;
+                    B[j+6][i+k]=g;
+                    B[j+7][i+k]=h;
+                }
+            }
+        }
+    } else if(M == 64) {
+        int i, j, i1, j1, k, a, b, c, d, e, f, g, h;
+        for(i=0;i<N;i+=32) {
+            for(j=0;j<N;j+=32) {
+                for(i1=0;i1<32;i1+=8) {
+                    for(j1=0;j1<32;j1+=8) {
+                        for(k=0;k<8;++k) {
+                            a = A[i+i1+k][j+j1+0];
+                            b = A[i+i1+k][j+j1+1];
+                            c = A[i+i1+k][j+j1+2];
+                            d = A[i+i1+k][j+j1+3];
+                            e = A[i+i1+k][j+j1+4];
+                            f = A[i+i1+k][j+j1+5];
+                            g = A[i+i1+k][j+j1+6];
+                            h = A[i+i1+k][j+j1+7];
+                            B[j+j1+0][i+i1+k]=a;
+                            B[j+j1+1][i+i1+k]=b;
+                            B[j+j1+2][i+i1+k]=c;
+                            B[j+j1+3][i+i1+k]=d;
+                            B[j+j1+4][i+i1+k]=e;
+                            B[j+j1+5][i+i1+k]=f;
+                            B[j+j1+6][i+i1+k]=g;
+                            B[j+j1+7][i+i1+k]=h;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /* 

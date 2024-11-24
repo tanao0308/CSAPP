@@ -1,50 +1,55 @@
->>> 命令行参数解释
-    Usage: ./csim-ref [-hv] -s <s> -E <E> -b <b> -t <tracefile>
-    • -h: Optional help flag that prints usage info
-    • -v: Optional verbose flag that displays trace info
-    • -s <s>: Number of set index bits (S = 2^s is the number of sets)
-    • -E <E>: Associativity (number of lines per set)
-    • -b <b>: Number of block bits (B = 2^b is the block size)
-    • -t <tracefile>: Name of the valgrind trace to replay
-
-    这是一个命令行工具 csim-ref 的用法说明。具体选项解释如下：
-    Usage: ./csim-ref [-hv] -s <s> -E <E> -b <b> -t <tracefile>
-    -h: 可选的帮助标志，显示使用说明。
-    -v: 可选的详细标志，显示追踪信息。
-    -s <s>: 设置索引位数。S = 2^s 是集合数（即缓存的集合数）。s 是指数，表示集合数的对数。
-    -E <E>: 关联度（每个集合的行数）。表示每个缓存集合中有多少条缓存行。
-    -b <b>: 块大小的位数。B = 2^b 是每个缓存块的大小。b 是对缓存块大小的对数。
-    -t <tracefile>: 要回放的 Valgrind 跟踪文件的名称。此文件包含了程序运行时的内存访问行为。
-
->>> tracefile 格式解释
-    Each line denotes one or two memory accesses. The format of each line is
-    [space]operation address,size
-    The operation field denotes the type of memory access: “I” denotes an instruction load, “L” a data load,
-    “S” a data store, and “M” a data modify (i.e., a data load followed by a data store). There is never a space
-    before each “I”. There is always a space before each “M”, “L”, and “S”. The address field specifies a 64-bit
-    hexadecimal memory address. The size field specifies the number of bytes accessed by the operation.
-    operation：
-        表示内存访问的类型，可以是以下四种：
-        I：指令加载（Instruction load）。
-        L：数据加载（Data load）。
-        S：数据存储（Data store）。
-        M：数据修改（Data modify），表示一次数据加载后紧接着的数据存储操作。
-    address：
-        64位十六进制格式的内存地址（比如：0x7fff）。
-        这是内存访问发生的位置。
-    size：
-        表示操作涉及的数据字节数（比如 4 表示操作访问了 4 字节数据）。
-        
->>> 缓存结构
-    在缓存系统中，内存块地址的映射到集合是通过内存地址的**集合索引位（Set Index Bits）**决定的。这些索引位从内存地址中提取，用来选择缓存中的特定集合。
-    一个内存地址通常是一个固定长度的二进制数（例如 32 位或 64 位）。在缓存中，内存地址会被分解为以下三部分：
-        块偏移（Block Offset）：
-            用于选择块中的具体字节。
-            大小由块的字节数 B 决定。
-        集合索引（Set Index）：
-            用于选择缓存中的集合。
-            大小由集合数量 S 决定。
-        标记（Tag）：
-            用于区分同一个集合中的不同内存块。
-    位数为：总地址位数 - 集合索引位数 - 块偏移位数。
-    地址分解公式：地址结构=[TagBits][SetIndexBits][BlockOffsetBits]
+>>> Part A: cache 模拟器程序编写
+    cache 模拟器命令行参数解释
+        这是一个命令行工具 csim 的用法说明。具体选项解释如下：
+        Usage: ./csim [-hv] -s <s> -E <E> -b <b> -t <tracefile>
+        -h: 可选的帮助标志，显示使用说明。
+        -v: 可选的详细标志，显示追踪信息。
+        -s <s>: 设置索引位数。S = 2^s 是集合数（即缓存的集合数）。s 是指数，表示集合数的对数。
+        -E <E>: 关联度（每个集合的行数）。表示每个缓存集合中有多少条缓存行。
+        -b <b>: 块大小的位数。B = 2^b 是每个缓存块的大小。b 是对缓存块大小的对数。
+        -t <tracefile>: 要回放的 Valgrind 跟踪文件的名称。此文件包含了程序运行时的内存访问行为。
+    cache 模拟器缓存结构
+        Cache:
+            Set0:
+                line0:     Valid Tag 0 1 ... B-1(bit)
+                line1:     Valid Tag 0 1 ... B-1(bit)
+                ...
+                line(E-1): Valid Tag 0 1 ... B-1(bit)
+            Set1:
+                line0:     Valid Tag 0 1 ... B-1(bit)
+                line1:     Valid Tag 0 1 ... B-1(bit)
+                ...
+                line(E-1): Valid Tag 0 1 ... B-1(bit)
+            ...
+            Set(n-1):
+                line0:     Valid Tag 0 1 ... B-1(bit)
+                line1:     Valid Tag 0 1 ... B-1(bit)
+                ...
+                line(E-1): Valid Tag 0 1 ... B-1(bit)
+        在缓存系统中，内存块地址的映射到集合是通过内存地址的**集合索引位（Set Index Bits）**决定的。这些索引位从内存地址中提取，用来选择缓存中的特定集合。
+        一个内存地址通常是一个固定长度的二进制数（例如 32 位或 64 位）。在缓存中，内存地址会被分解为以下三部分：
+            块偏移（Block Offset）：
+                用于选择块中的具体字节。
+                大小由块的字节数 B 决定。
+            集合索引（Set Index）：
+                用于选择缓存中的集合。
+                大小由集合数量 S 决定。
+            标记（Tag）：
+                用于区分同一个集合中的不同内存块。
+        位数为：总地址位数 - 集合索引位数 - 块偏移位数。
+        地址分解公式：地址结构=[TagBits][SetIndexBits][BlockOffsetBits]
+    tracefile 格式解释
+            表示内存访问的类型，可以是以下四种：
+            I：指令加载（Instruction load）。
+            L：数据加载（Data load）。
+            S：数据存储（Data store）。
+            M：数据修改（Data modify），表示一次数据加载后紧接着的数据存储操作。
+        address：
+            64位十六进制格式的内存地址（比如：0x7fff）。
+            这是内存访问发生的位置。
+        size：
+            表示操作涉及的数据字节数（比如 4 表示操作访问了 4 字节数据）。
+    程序编写：
+        使用链表 O(n) 复杂度进行 lru 算法
+        使用 getopt 进行命令行参数获取
+        使用 fopen 打开文件， sscanf 读取每一行数据
