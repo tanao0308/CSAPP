@@ -1,0 +1,38 @@
+• eval: Main routine that parses and interprets the command line. [70 lines]
+• builtin cmd: Recognizes and interprets the built-in commands: quit, fg, bg, and jobs. [25
+lines]
+• do bgfg: Implements the bg and fg built-in commands. [50 lines]
+• waitfg: Waits for a foreground job to complete. [20 lines]
+• sigchld handler: Catches SIGCHILD signals. 80 lines]
+• sigint handler: Catches SIGINT (ctrl-c) signals. [15 lines]
+• sigtstp handler: Catches SIGTSTP (ctrl-z) signals. [15 lines]
+
+    eval: 主例程，解析并解释命令行。（70 行）
+    builtin cmd: 识别并解释内置命令：quit、fg、bg 和 jobs。（25 行）
+    do bgfg: 实现内置命令 bg 和 fg。（50 行）
+    waitfg: 等待前台任务完成。（20 行）
+    sigchld handler: 捕获 SIGCHLD 信号。（80 行）
+    sigint handler: 捕获 SIGINT（Ctrl-C）信号。（15 行）
+    sigtstp handler: 捕获 SIGTSTP（Ctrl-Z）信号。（15 行）
+
+>>> 四种异常：
+    中断：
+        由外部引入，例如 IO 设备键盘打了一个字母。
+    陷阱：
+        由正在执行的指令引入，为系统调用。操作系统执行完毕之后会运行发起此次调用的下一条指令。
+    故障：
+        由正在执行的指令引入，例如缺页异常，操作系统执行结束后会重试此指令。
+    终止：
+        直接终止此程序。
+
+>>> execve
+    int execve(const char *pathname, char *const argv[], char *const envp[]);
+    pathname:
+        要执行的程序的路径，可以是绝对路径或相对路径。
+        如果路径无效或程序不可执行，调用将失败。
+    argv[]:
+        一个以 NULL 结尾的字符串数组，表示传递给新程序的命令行参数。
+        argv[0] 通常是程序自身的名字。
+    envp[]:
+        一个以 NULL 结尾的字符串数组，表示新程序的环境变量。
+        可以传递自定义环境变量，也可以直接传入当前环境变量（如 environ 全局变量）。
