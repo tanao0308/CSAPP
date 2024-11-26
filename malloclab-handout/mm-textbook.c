@@ -44,6 +44,11 @@ team_t team = {
 
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 
+struct Block {
+    size_t size;
+    char empty;
+} __attribute__((aligned(8)));
+
 /* 
  * mm_init - initialize the malloc package.
  */
@@ -57,15 +62,42 @@ int mm_init(void)
  * mm_malloc - Allocate a block by incrementing the brk pointer.
  *     Always allocate a block whose size is a multiple of the alignment.
  */
+/*
+先实现一个每次从头开始找空间大于自身的空闲块的方法
+将每个数据块分为自定义的 struct Block 头部和 data 数据部
+头部存的 size 字段是 data 对齐后的大小（对齐之前的大小并无意义）
+*/
 void *mm_malloc(size_t size)
 {
-    int newsize = ALIGN(size + SIZE_T_SIZE);
-    void *p = mem_sbrk(newsize);
+    void* p = mem_heap_lo();
+    while(p <= mem_heap_hi()) {
+        struct Block* block = (struct Block*)p;
+        if(block->empty == 0 || size > block->size) {
+            // 这里的 struct Block 的大小貌似已经是按照自动对齐之后的大小计算的了，而且 block->size 存的也是对齐之后的值
+            p = p + sizeof(struct Block) + block->size;
+            continue;
+        }
+        // 若能够分拆，则分拆为两个块
+        if(block->size >= ALIGN(size) + sizeof(struct Block) + 8) {
+            struct Block* new_block = (struct Block*)(p + sizeof(struct Block) + ALIGN(size));
+            new_block->size = block->size - ALIGN(size) - sizeof(struct Block);
+            new_block->empty = 1;
+            block->size = ALIGN(size);
+            block->empty = 0;
+        } else { // 否则，直接存入
+            block->empty = 0;
+        }
+        return p + sizeof(struct Block);
+    }
+
+    p = mem_sbrk(sizeof(struct Block) + ALIGN(size));
     if (p == (void *)-1)
 	    return NULL;
     else {
-        *(size_t *)p = size;
-        return (void *)((char *)p + SIZE_T_SIZE);
+        struct Block* block = (struct Block*)p;
+        block->size = ALIGN(size);
+        block->empty = 0;
+        return p + sizeof(struct Block);
     }
 }
 
@@ -74,6 +106,23 @@ void *mm_malloc(size_t size)
  */
 void mm_free(void *ptr)
 {
+    struct Block* block = (struct Block*)(ptr - sizeof(struct Block));
+    block->empty = 1;
+    
+    void* p = mem_heap_lo();
+    while(1) {
+        struct Block* block = (struct Block*)p;
+        if(p + sizeof(struct Block) + block->size > mem_heap_hi()) {
+            break;
+        }
+        void* nxt_p = p + sizeof(struct Block) + block->size;
+        struct Block* nxt_block = (struct Block*)nxt_p;
+        if(!block->empty || !nxt_block->empty) {
+            p += sizeof(struct Block) + block->size;
+            continue;
+        }
+        block->size += sizeof(struct Block) + nxt_block->size;
+    }
 }
 
 /*

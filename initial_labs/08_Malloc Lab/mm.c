@@ -44,58 +44,28 @@ team_t team = {
 
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 
-struct Block {
-    size_t size;
-    char empty;
-} __attribute__((aligned(8)));
-
 /* 
  * mm_init - initialize the malloc package.
  */
 int mm_init(void)
 {
-    mem_init();
-    mem_sbrk(8*22);
-    void* p = mem_heap_lo();
-    for(int i=0; i<22; ++i) {
-        *(size_t*)(p+8*i) = 0;
-    }
     return 0;
-}
-
-void unpack_head(size_t head, int* size, int* tag) {
-    *size = head >> 3;
-    *tag = head & 7;
-}
-
-void* find_block(int idx) {
-    if()
-    void* p = mem_heap_lo();
-    p += idx*8;
-    p = *(void**)p; // 让 p 指向 p 指向地址这个地址上的值
-    while(1) {
-        size_t head = *(size_t*)p;
-        int size, tag;
-        unpack_head(head, &size, &tag);
-        if()
-    }
 }
 
 /* 
  * mm_malloc - Allocate a block by incrementing the brk pointer.
  *     Always allocate a block whose size is a multiple of the alignment.
  */
-/*
-p0, p1, p2, ..., p21
-*/
 void *mm_malloc(size_t size)
 {
-    int idx = 0;
-    while((1<<idx) < size) {
-        ++idx;
+    int newsize = ALIGN(size + SIZE_T_SIZE);
+    void *p = mem_sbrk(newsize);
+    if (p == (void *)-1)
+	return NULL;
+    else {
+        *(size_t *)p = size;
+        return (void *)((char *)p + SIZE_T_SIZE);
     }
-    void* p = find_block(idx);
-    return p+8;
 }
 
 /*
@@ -103,23 +73,6 @@ void *mm_malloc(size_t size)
  */
 void mm_free(void *ptr)
 {
-    struct Block* block = (struct Block*)(ptr - sizeof(struct Block));
-    block->empty = 1;
-    
-    void* p = mem_heap_lo();
-    while(1) {
-        struct Block* block = (struct Block*)p;
-        if(p + sizeof(struct Block) + block->size > mem_heap_hi()) {
-            break;
-        }
-        void* nxt_p = p + sizeof(struct Block) + block->size;
-        struct Block* nxt_block = (struct Block*)nxt_p;
-        if(!block->empty || !nxt_block->empty) {
-            p += sizeof(struct Block) + block->size;
-            continue;
-        }
-        block->size += sizeof(struct Block) + nxt_block->size;
-    }
 }
 
 /*
