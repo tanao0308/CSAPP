@@ -1,0 +1,9 @@
+>>> 找不到 asm 头文件
+    https://askubuntu.com/questions/530248/asm-errno-h-no-such-file-or-directory
+
+>>> 如何测试
+    make && ./mdriver -f short1-bal.rep
+
+>>> 静态链接库 动态链接库
+    区别是静态链接库会将二进制代码指令在一开始就加入程序的代码区和常量区（完全融入）
+    而动态链接库只有当调用到库内要使用的函数时，才会将对应的指令加入堆区上部、栈区下部这个位置，不过运行此代码使用的堆栈还是和原程序共享的

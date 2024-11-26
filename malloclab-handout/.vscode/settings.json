@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "clock.h": "c"
+        "clock.h": "c",
+        "memlib.h": "c",
+        "config.h": "c"
     }
 }
